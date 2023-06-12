@@ -56,6 +56,15 @@ export class Utility extends BaseModule {
         return data.name || this.stringifyHost(data);
     }
 
+    public parseBase64ImageURL(url: string): Buffer {
+        const [data, base64] = url.split(',');
+
+        const [mime, type] = (data.split(':')[1]?.split(';') ?? []).filter(Boolean);
+        if (type.toLowerCase() !== 'base64') throw new Error('URL is not a valid base64');
+
+        return Buffer.from(base64, 'base64');
+    }
+
     public ms(value: string): number|undefined;
     public ms(value: number, long?: boolean): string;
     public ms(value: string|number, long?: boolean): string|number|undefined {

@@ -1,7 +1,8 @@
-import { SlashCommandBuilder } from 'reciple';
+import { MessageCommandBuilder, SlashCommandBuilder } from 'reciple';
 import { BaseModule } from '../BaseModule.js';
 import DatabaseHelpers from '../Utils/DatabaseHelpers.js';
 import Utility from '../Utils/Utility.js';
+import PingDataManager from '../Utils/PingDataManager.js';
 
 export class Ip extends BaseModule {
     public async onStart(): Promise<boolean> {
@@ -40,7 +41,32 @@ export class Ip extends BaseModule {
                         return;
                     }
 
-                    await interaction.editReply(server.name || Utility.stringifyHost(server));
+                    const options = await PingDataManager.createPingMessageOptions(server, interaction.user.id);
+
+                    await interaction.editReply(options);
+                }),
+            new MessageCommandBuilder()
+                .setName('ip')
+                .setDescription('Get server status')
+                .setCooldown(10 * 1000)
+                .setExecute(async ({ message }) => {
+                    if (!message.inGuild()) return;
+
+                    const reply = await message.reply({
+                        content: Utility.createLabel('Pinging...', '⌛'),
+                        allowedMentions: { parse: [] }
+                    });
+
+                    const guildData = await DatabaseHelpers.fetchGuildData(message.guildId);
+                    const server = guildData.servers.find(s => s.id === guildData.defaultServerId);
+
+                    if (!server) {
+                        await reply.edit(Utility.createErrorMessage('This guild does not have a default server'));
+                        return;
+                    }
+
+                    const options = await PingDataManager.createPingMessageOptions(server, message.author.id);
+                    await message.edit(options);
                 })
         ];
 
