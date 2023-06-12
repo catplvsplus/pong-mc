@@ -148,7 +148,7 @@ export class PingDataManager extends BaseModule {
             if (pingData.version) {
                 embed.addFields({
                     name: Utility.createLabel('Version', '🎮'),
-                    value: pingData.version,
+                    value: pingData.version.replace(/§[0-9A-FK-OR]/gi, ''),
                     inline: true
                 });
             }
@@ -217,7 +217,7 @@ export class PingDataManager extends BaseModule {
 
         const newPingResult = pingData as JavaProtocol.NewPingResult;
 
-        status.status = 'Online';
+        status.status = newPingResult.players.max ? 'Online' : 'Offline';
         status.maxPlayers = newPingResult.players.max;
         status.onlinePlayers = newPingResult.players.online;
         status.latency = newPingResult.latency;
@@ -247,7 +247,7 @@ export class PingDataManager extends BaseModule {
 
         if (!pingData) return status;
 
-        status.status = 'Online';
+        status.status = pingData.playersMax ? 'Online' : 'Offline';
         status.maxPlayers = pingData.playersMax;
         status.onlinePlayers = pingData.playersOnline;
         status.latency = null;
