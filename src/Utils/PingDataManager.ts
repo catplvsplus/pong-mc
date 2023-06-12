@@ -59,11 +59,11 @@ export class PingDataManager extends BaseModule {
 
                     const editMessage = (options: MessageEditOptions|string) => message.flags.has('Ephemeral')
                         ? interaction.editReply({ ...(typeof options === 'string' ? { content: options } : options), message })
-                        : message.edit(options);
+                        : message.edit({ ...(typeof options === 'string' ? { content: options } : options), allowedMentions: { parse: [] } });
 
                     await editMessage({
                         content: Utility.createLabel('Pinging...', '⌛'),
-                        components: []
+                        components: [],
                     });
 
                     const server = await Utility.prisma.servers.findFirst({ where: { id: serverId, guildId: interaction.guildId } });
