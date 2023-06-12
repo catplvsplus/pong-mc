@@ -41,16 +41,23 @@ const shards = new ClusterManager(recipleBin, {
     shardArgs: ['--shardmode', ...process.argv.slice(2)],
     token: config.token,
     mode: 'process',
-    respawn: true
+    respawn: true,
 });
 
 shards.on('clusterCreate', cluster => {
     console.log(`Creating cluster ${cluster.id}...`);
 
+    if (cluster.thread?.process instanceof ChildProcess) cluster.thread.process.on('exit', c => {
+        cluster.kill({ force: true });
+    })
+
     cluster.on('spawn', thread => console.log(`Spawned ${thread instanceof ChildProcess ? ('process ' + thread.pid) : ('worker ' + thread?.threadId)}; clusterId: ${cluster.id};`));
     cluster.on('death', thread => console.log(`Stopped cluster ${thread.id}`));
-    cluster.on('error', error => console.error(`An error occured in cluster ${cluster.id}:`, error));
     cluster.on('message', message => console.log(message.toString().trim()));
+    cluster.on('error', error => {
+        console.error(`An error occured in cluster ${cluster.id}:`, error);
+        cluster.respawn();
+    });
 });
 
 shards.on('clusterReady', cluster => console.log(`Cluster ${(cluster.id)} is ready!`));
