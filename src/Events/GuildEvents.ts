@@ -15,7 +15,7 @@ export class GuildEvents extends BaseModule {
         });
 
         client.on('guildDelete', async guild => {
-            await Utility.prisma.guilds.delete({
+            await Utility.prisma.guilds.deleteMany({
                 where: { id: guild.id }
             });
         });
