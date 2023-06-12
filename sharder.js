@@ -1,14 +1,16 @@
 // @ts-check
-import { ShardingManager } from 'discord.js';
 import { Config, cli, command, createLogger } from 'reciple';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import { ClusterManager } from 'discord-hybrid-sharding';
+import { ChildProcess } from 'child_process';
 
 const console = await (await createLogger({
         enabled: true,
         debugmode: true,
         coloredMessages: true,
     }))
+    .setDebugMode(true)
     .setName('ShardManager')
     .createFileWriteStream({
         file: path.join(cli.cwd, 'sharder-logs/shards.log'),
@@ -35,30 +37,23 @@ const configParser = await (new Config(mainConfigPath, configPaths)).parseConfig
 const config = configParser.getConfig();
 
 const recipleBin = path.join(path.dirname(fileURLToPath(await import.meta.resolve('reciple'))), 'bin.mjs');
-const shards = new ShardingManager(recipleBin, {
+const shards = new ClusterManager(recipleBin, {
     shardArgs: ['--shardmode', ...process.argv.slice(2)],
     token: config.token,
-    totalShards: 2
+    mode: 'process',
+    respawn: true
 });
 
-shards.on('shardCreate', shard => {
-    console.log(`Creating shard ${shard.id}...`);
+shards.on('clusterCreate', cluster => {
+    console.log(`Creating cluster ${cluster.id}...`);
 
-    shard.on('ready', () => console.log(`Shard ${shard.id} is ready!`));
-    shard.on('reconnecting', () => console.log(`Shard ${shard.id} is reconnecting!`));
-    shard.on('disconnect', () => console.log(`Shard ${shard.id} disconnected!`));
-    shard.on('death', () => console.log(`Shard ${shard.id} died!`));
-    shard.on('error', err => console.log(`Shard ${shard.id} encountered an error!\n`, err));
-
-    if (shard.worker) {
-        shard.worker.stdout.on('data', chunk => console.writeStream?.write(chunk.toString('utf-8').trim()));
-        shard.worker.stderr.on('data', chunk => console.writeStream?.write(chunk.toString('utf-8').trim()));
-    }
-
-    if (shard.process) {
-        shard.process.stdout?.on('data', chunk => console.writeStream?.write(chunk.toString('utf-8').trim()));
-        shard.process.stderr?.on('data', chunk => console.writeStream?.write(chunk.toString('utf-8').trim()));
-    }
+    cluster.on('spawn', thread => console.log(`Spawned ${thread instanceof ChildProcess ? ('process ' + thread.pid) : ('worker ' + thread?.threadId)}; clusterId: ${cluster.id};`));
+    cluster.on('death', thread => console.log(`Stopped cluster ${thread.id}`));
+    cluster.on('error', error => console.error(`An error occured in cluster ${cluster.id}:`, error));
+    cluster.on('message', message => console.log(message.toString().trim()));
 });
+
+shards.on('clusterReady', cluster => console.log(`Cluster ${(cluster.id)} is ready!`));
+shards.on('debug', message => console.debug(message));
 
 shards.spawn();

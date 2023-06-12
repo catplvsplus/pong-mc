@@ -3,14 +3,20 @@ import { BaseModule } from '../BaseModule.js';
 import { AnySlashCommandBuilder, RecipleClient, SlashCommandBuilder } from 'reciple';
 import { ButtonBuilder, ButtonStyle, Collection, SlashCommandSubcommandBuilder, inlineCode } from 'discord.js';
 import { ButtonPaginationControllerResolavable } from '@falloutstudios/djs-pagination';
+import { ClusterClient, getInfo } from 'discord-hybrid-sharding';
 import ms from 'ms';
 
 export class Utility extends BaseModule {
     public client!: RecipleClient;
     public prisma: PrismaClient = new PrismaClient();
+    public cluster!: ClusterClient<RecipleClient>;
 
     public async onStart(client: RecipleClient): Promise<boolean> {
+        client.options.shards = getInfo().SHARD_LIST;
+        client.options.shardCount = getInfo().TOTAL_SHARDS;
+
         this.client = client;
+        this.cluster = new ClusterClient(client);
 
         return true;
     }
