@@ -66,7 +66,7 @@ export class Ip extends BaseModule {
                     }
 
                     const options = await PingDataManager.createPingMessageOptions(server, message.author.id);
-                    await message.edit(options);
+                    await reply.edit(options);
                 })
         ];
 
