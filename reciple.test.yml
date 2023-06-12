@@ -1,0 +1,9 @@
+extends: reciple.yml
+
+applicationCommandRegister:
+  allowRegisterGlobally: false
+  registerToGuilds:
+    - env:TEST_GUILD
+
+logger:
+  debugmode: true

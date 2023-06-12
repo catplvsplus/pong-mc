@@ -1,0 +1,37 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ServerProtocol {
+  JAVA
+  BEDROCK
+}
+
+model Guilds {
+  id              String  @id @unique
+  defaultServerId String?
+
+  servers Servers[]
+}
+
+model Servers {
+  id        String         @id @unique @default(uuid())
+  guildId   String
+  name      String?
+  host      String
+  port      Int?
+  protocol  ServerProtocol @default(JAVA)
+  lastPing  Json?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @default(now()) @updatedAt
+
+  guild Guilds @relation(fields: [guildId], references: [id], onDelete: Cascade)
+}
