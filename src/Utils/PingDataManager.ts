@@ -36,6 +36,8 @@ export type BedrockPingOptions = Omit<PingOptions, 'protocol' | 'timeout'> & { p
 export class PingDataManager extends BaseModule {
     readonly cache: Collection<string, PingData> = new Collection();
 
+    public sweeper?: NodeJS.Timer;
+
     public async onStart(): Promise<boolean> {
         this.interactionListeners = [
             {
@@ -82,6 +84,10 @@ export class PingDataManager extends BaseModule {
             }
         ];
 
+        this.sweeper = setInterval(() => {
+            this.cache.sweep(p => (Date.now() - p.pingedAt.getTime()) > (1000 * 60 * 60))
+        }).unref();
+
         return true;
     }
 
@@ -101,18 +107,22 @@ export class PingDataManager extends BaseModule {
     }
 
     public async createPingMessageOptions(server: Servers, authorId?: string): Promise<BaseMessageOptions> {
-        const pingData = await this.ping({
-            host: server.host,
-            port: server.port || undefined,
-            protocol: server.protocol,
-            timeout: 5 * 1000
-        });
+        let pingData: PingData|undefined = this.cache.get(Utility.stringifyHost(server));
+
+        if (!pingData || (pingData.pingedAt.getTime() + (60 * 1000)) <= Date.now()  || pingData.status === 'Offline') {
+            pingData = await this.ping({
+                host: server.host,
+                port: server.port || undefined,
+                protocol: server.protocol,
+                timeout: 15 * 1000
+            });
+        }
 
         const embed = new EmbedBuilder();
 
         embed.setColor(pingData.status === 'Online' ? 'Green' : 'DarkerGrey');
         embed.setTitle(`${Utility.parseServerDisplayName(server)} is ${pingData.status.toLowerCase()}`);
-        embed.setDescription(pingData.motd || null);
+        embed.setDescription(pingData.motd?.replace(/§[0-9A-FK-OR]/gi, '') || null);
         embed.setTimestamp(pingData.pingedAt);
 
         embed.setFooter({
