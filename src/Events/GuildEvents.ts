@@ -9,13 +9,13 @@ export class GuildEvents extends BaseModule {
 
     public async onLoad(client: RecipleClient<true>): Promise<void> {
         client.on('guildCreate', async guild => {
-            Utility.prisma.guilds.create({
+            await Utility.prisma.guilds.create({
                 data: { id: guild.id }
             });
         });
 
         client.on('guildDelete', async guild => {
-            Utility.prisma.guilds.delete({
+            await Utility.prisma.guilds.delete({
                 where: { id: guild.id }
             });
         });

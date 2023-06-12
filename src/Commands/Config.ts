@@ -3,6 +3,7 @@ import { BaseModule } from '../BaseModule.js';
 import { ServerProtocol, Servers } from '@prisma/client';
 import { ChatInputCommandInteraction, inlineCode } from 'discord.js';
 import Utility from '../Utils/Utility.js';
+import DatabaseHelpers from '../Utils/DatabaseHelpers.js';
 
 export class Config extends BaseModule {
     public async onStart(): Promise<boolean> {
@@ -119,6 +120,8 @@ export class Config extends BaseModule {
             await interaction.editReply(Utility.createErrorMessage(`${inlineCode(ip)} is already added in this guild`));
             return;
         }
+
+        await DatabaseHelpers.fetchGuildData(interaction.guildId);
 
         const server = await Utility.prisma.servers.create({
             data: {
