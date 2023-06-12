@@ -124,20 +124,23 @@ export class PingDataManager extends BaseModule {
         if (pingData.status === 'Online') {
             embed.addFields({
                 name: Utility.createLabel('Players', '👥'),
-                value: `**${pingData.onlinePlayers}/${pingData.maxPlayers}**`
+                value: `${pingData.onlinePlayers}/${pingData.maxPlayers}`,
+                inline: true
             });
 
             if (pingData.latency) {
                 embed.addFields({
                     name: Utility.createLabel('Ping', '🏓'),
-                    value: inlineCode(Utility.ms(pingData.latency, true))
+                    value: inlineCode(Utility.ms(pingData.latency, true)),
+                    inline: true
                 });
             }
 
             if (pingData.version) {
                 embed.addFields({
                     name: Utility.createLabel('Version', '🎮'),
-                    value: pingData.version
+                    value: pingData.version,
+                    inline: true
                 });
             }
         }
