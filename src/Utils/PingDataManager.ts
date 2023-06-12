@@ -110,9 +110,8 @@ export class PingDataManager extends BaseModule {
 
         const embed = new EmbedBuilder();
 
-        embed.setAuthor({ name: `Server is ${pingData.status.toLowerCase()}` });
         embed.setColor(pingData.status === 'Online' ? 'Green' : 'DarkerGrey');
-        embed.setTitle(Utility.parseServerDisplayName(server));
+        embed.setTitle(`${Utility.parseServerDisplayName(server)} is ${pingData.status.toLowerCase()}`);
         embed.setDescription(pingData.motd || null);
         embed.setTimestamp(pingData.pingedAt);
 
