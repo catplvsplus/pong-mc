@@ -85,7 +85,7 @@ export class PingDataManager extends BaseModule {
         return true;
     }
 
-    public async ping(options: (JavaPingOptions|BedrockPingOptions) & { useWorkerThread?: boolean; cache?: boolean; }): Promise<PingData> {
+    public async ping(options: PingOptions & { useWorkerThread?: boolean; cache?: boolean; }): Promise<PingData> {
         const pingData = await PingDataManager.pingServer(options);
 
         if (options.cache !== false) {
@@ -104,17 +104,22 @@ export class PingDataManager extends BaseModule {
         const pingData = await this.ping({
             host: server.host,
             port: server.port || undefined,
-            protocol: server.protocol
+            protocol: server.protocol,
+            timeout: 5 * 1000
         });
 
         const embed = new EmbedBuilder();
 
         embed.setAuthor({ name: `Server is ${pingData.status.toLowerCase()}` });
-        embed.setFooter({ text: Utility.stringifyHost(server), iconURL: pingData.favicon ? 'attachment://favicon.png' : undefined });
         embed.setColor(pingData.status === 'Online' ? 'Green' : 'DarkerGrey');
         embed.setTitle(Utility.parseServerDisplayName(server));
         embed.setDescription(pingData.motd || null);
         embed.setTimestamp(pingData.pingedAt);
+
+        embed.setFooter({
+            text: `${Utility.stringifyHost(server)} (${server.protocol === 'JAVA' ? 'Java Edition' : 'Bedrock Edition'})`,
+            iconURL: pingData.favicon ? 'attachment://favicon.png' : undefined
+        });
 
         if (pingData.status === 'Online') {
             embed.addFields({
