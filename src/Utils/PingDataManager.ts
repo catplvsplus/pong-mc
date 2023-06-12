@@ -156,7 +156,8 @@ export class PingDataManager extends BaseModule {
                             .setLabel('Refresh')
                     ]
                 }
-            ]
+            ],
+            allowedMentions: { parse: [] }
         };
     }
 
