@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, ServerProtocol, Servers } from '@prisma/client';
 import { BaseModule } from '../BaseModule.js';
 import { AnySlashCommandBuilder, RecipleClient, SlashCommandBuilder } from 'reciple';
 import { ButtonBuilder, ButtonStyle, Collection, SlashCommandSubcommandBuilder, inlineCode } from 'discord.js';
@@ -33,6 +33,27 @@ export class Utility extends BaseModule {
 
     public stringifyHost(data: { host: string; port?: number|null; }): string {
         return `${data.host}${data.port ? (':' + data.port) : ''}`;
+    }
+
+    public parseHost(ip: string, protocol: ServerProtocol): { host: string; port: number; }
+    public parseHost(ip: string, protocol?: ServerProtocol): { host: string; port?: number; } {
+        const arr = ip.trim().toLowerCase().split(':');
+        const host = arr.shift() || 'localhost';
+
+        let port = arr[0] ? Number(arr.shift()) : undefined;
+            port = typeof port === 'number' && isFinite(port) && !isNaN(port)
+                ? port
+                : protocol === 'JAVA'
+                    ? 25565
+                    : protocol === 'BEDROCK'
+                        ? 19132
+                        : undefined;
+
+        return { host, port };
+    }
+
+    public parseServerDisplayName(data: Pick<Servers, 'name'|'host'|'port'>): string {
+        return data.name || this.stringifyHost(data);
     }
 
     public ms(value: string): number|undefined;
