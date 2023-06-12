@@ -184,9 +184,7 @@ export class PingDataManager extends BaseModule {
         }
 
         return new Promise((res, rej) => {
-            const worker = new Worker(join(__dirname, './workers/ping.js'), {
-                workerData: options
-            });
+            const worker = new Worker(join(__dirname, './workers/ping.js'), { workerData: options });
 
             worker.on('message', res);
             worker.on('error', rej);
